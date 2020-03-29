@@ -16,19 +16,7 @@
 #define CGOLED_H_
 #endif /* CGOLED_H_ */
 
-// user definable pin mapping.
-#define OLED_PORT_DB0 PORTD
-#define OLED_PORT_DB1 PORTD
-#define OLED_PORT_DB2 PORTD
-#define OLED_PORT_DB3 PORTD
-#define OLED_PORT_DB4 PORTD
-#define OLED_PORT_DB5 PORTD
-#define OLED_PORT_DB6 PORTD
-#define OLED_PORT_DB7 PORTD
-#define OLED_PORT_RS PORTB
-#define OLED_PORT_RW PORTB
-#define OLED_PORT_EN PORTB
-
+// user definable data direction register mapping (input or output).
 #define OLED_DDR_DB0 DDRD
 #define OLED_DDR_DB1 DDRD
 #define OLED_DDR_DB2 DDRD
@@ -41,6 +29,23 @@
 #define OLED_DDR_RW DDRB
 #define OLED_DDR_EN DDRB
 
+// user definable port mapping.
+#define OLED_PORT_DB0 PORTD
+#define OLED_PORT_DB1 PORTD
+#define OLED_PORT_DB2 PORTD
+#define OLED_PORT_DB3 PORTD
+#define OLED_PORT_DB4 PORTD
+#define OLED_PORT_DB5 PORTD
+#define OLED_PORT_DB6 PORTD
+#define OLED_PORT_DB7 PORTD
+#define OLED_PORT_RS PORTB
+#define OLED_PORT_RW PORTB
+#define OLED_PORT_EN PORTB
+
+// user definable port pin mapping for reading.
+#define OLED_PIN_DB7 PIND
+
+// user definable port pin mapping for writing.
 #define OLED_DB0 PD0
 #define OLED_DB1 PD1
 #define OLED_DB2 PD2
@@ -49,11 +54,10 @@
 #define OLED_DB5 PD5
 #define OLED_DB6 PD6
 #define OLED_DB7 PD7
-#define OLED_RS PB6
-#define OLED_RW PB7
+#define OLED_RS PB2
+#define OLED_RW PB1
 #define OLED_EN PB0
 
-#define OLED_PIN_DB7 PIND
 
 #define OLED_PIXEL_COLUMNS 50
 #define OLED_PIXEL_ROWS    16
@@ -110,14 +114,20 @@
 // Sets the ports using the defines declared in the header file.
 void oled_init();
 
-// Writes an operation (display clear etc.). Checks the busy flag first.
-void oled_write_cmd(uint8_t command);
+// clears the display.
+void oled_clear();
 
-// Writes an operation (display clear etc.).  Optionally checks the busy flag first.
-void oled_write_cmd_busy(uint8_t command, bool wait_for_bf);
+// sets the cursor back to home (top left).
+void oled_cursor_home();
 
-// Writes the given data to DDRAM or CGRAM.
-void oled_write_data(uint8_t data);
+// Switch to incremental cursor mode.
+void oled_incremental_cursor();
+
+// switch the OLED on.
+void oled_power_on();
+
+// switch the OLED on.
+void oled_power_off();
 
 // write character at given position.
 void oled_write_character(uint8_t character, uint8_t column, uint8_t row);
@@ -127,6 +137,16 @@ void oled_write_character(uint8_t character, uint8_t column, uint8_t row);
 // characters are 5x8 (7 + cursor row).
 // patterns pointer must point to 8 uint8_t rows.
 void oled_set_character(uint8_t char_n, uint8_t const * const patterns);
+
+
+// Writes an operation (display clear etc.). Checks the busy flag first.
+void oled_write_cmd(uint8_t command);
+
+// Writes an operation (display clear etc.).  Optionally checks the busy flag first.
+void oled_write_cmd_busy(uint8_t command, bool wait_for_bf);
+
+// Writes the given data to DDRAM or CGRAM.
+void oled_write_data(uint8_t data);
 
 // Write pixel, not implemented.
 void oled_write_pixel(uint8_t x, uint8_t y, bool value);

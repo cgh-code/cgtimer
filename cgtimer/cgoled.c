@@ -86,6 +86,68 @@ void oled_init()
 	OLED_DDR_EN |= (1 << OLED_EN);
 }
 
+// clears the display.
+void oled_clear()
+{
+	oled_write_cmd(CMD_CLEAR_DISPLAY);
+}
+
+// sets the cursor back to home (top left).
+void oled_cursor_home()
+{
+	oled_write_cmd(CMD_CURSOR_HOME);
+}
+
+// Switch to incremental cursor mode.
+void oled_incremental_cursor()
+{
+	oled_write_cmd(CMD_ENTRY_CONTROL | CMD_ENTRY_INCREMENT);
+}
+
+// switch the OLED on.
+void oled_power_on()
+{
+	oled_write_cmd(CMD_DISPLAY_CONTROL | CMD_DISPLAY_POWER);
+}
+
+// switch the OLED on.
+void oled_power_off()
+{
+	oled_write_cmd(CMD_DISPLAY_CONTROL);
+}
+
+// write character at given position.
+// column and row are 1 based.
+void oled_write_character(uint8_t character, uint8_t column, uint8_t row)
+{
+	uint8_t addr = get_ddram_address_n1(column, row);
+	oled_write_cmd(CMD_DDRAM | addr);
+
+	oled_write_data(character);
+}
+
+
+// sets a user defined character in the displays CGRAM.
+// 8 user definable characters (char_n 1 to 8).
+// characters are 5x8 (7 + cursor row).
+// patterns pointer must point to 8 uint8_t rows.
+void oled_set_character(uint8_t char_n, uint8_t const * const patterns)
+{
+	uint8_t addr;
+	uint8_t ptn;
+
+	for (uint8_t n = 0; n != 7; n++)
+	{
+		addr = get_cgram_address(char_n, n + 1);
+		oled_write_cmd(CMD_CGRAM | addr);
+
+		ptn = *(patterns + n);
+		ptn |= (1 << 7) | (1 << 6) | (1 << 5);
+		oled_write_data(ptn);
+	}
+}
+
+
 // Writes an operation (display clear etc.). Checks the busy flag first.
 void oled_write_cmd(uint8_t command)
 {
@@ -132,47 +194,15 @@ void oled_write_data(uint8_t data)
 	OLED_PORT_EN &= ~(1 << OLED_EN);
 }
 
-// write character at given position.
-// column and row are 1 based.
-void oled_write_character(uint8_t character, uint8_t column, uint8_t row)
-{
-	uint8_t addr = get_ddram_address_n1(column, row);
-	oled_write_cmd(CMD_DDRAM | addr);
-
-	oled_write_data(character);
-}
-
-
-// sets a user defined character in the displays CGRAM.
-// 8 user definable characters (char_n 1 to 8).
-// characters are 5x8 (7 + cursor row).
-// patterns pointer must point to 8 uint8_t rows.
-void oled_set_character(uint8_t char_n, uint8_t const * const patterns)
-{
-	uint8_t addr;
-	uint8_t ptn;
-
-	for (uint8_t n = 0; n != 7; n++)
-	{
-		addr = get_cgram_address(char_n, n + 1);
-		oled_write_cmd(CMD_CGRAM | addr);
-
-		ptn = *(patterns + n);
-		ptn |= (1 << 7) | (1 << 6) | (1 << 5);
-		oled_write_data(ptn);
-	}
-}
-
 // Write pixel, not implemented.
 void oled_write_pixel(uint8_t x, uint8_t y, bool value)
 {
 	uint8_t gxa = get_gxa_address(x);
-	uint8_t gya = get_gya_address(0);
+	//uint8_t gya = get_gya_address(0);
 
-	//oled_write_cmd(CMD_LINE | 0x00);
-
-	oled_write_data(gxa);
-	oled_write_data(gya);
+	oled_write_cmd(CMD_LINE | 0x00);
+	oled_write_cmd(gxa);
+	//oled_write_data(gya);
 
 	// set page address
 	// set column address

@@ -38,14 +38,12 @@ void config_buttons();
 void config_timer();
 
 void display_setup();
-void display_on();
-void display_off();
 void display_time(uint16_t seconds);
 void display_mode(uint8_t per_second);
 bool button1_down();
 
-void display_hello();
-void display_pixels();
+//void display_hello();
+//void display_pixels();
 
 void sleep();
 void wake();
@@ -98,10 +96,8 @@ int main(void)
 	config_buttons();
 
 	display_setup();
-	//display_time(g_count_seconds);
-	display_on();
-	//display_hello();
-	display_pixels();
+	display_time(g_count_seconds);
+	oled_power_on();
 
 	config_timer();
 
@@ -183,7 +179,7 @@ void sleep()
 	g_per_second = 0;
 	g_mode = MODE_SLEEP;
 
-	display_off();
+	oled_power_off();
 }
 
 void wake()
@@ -192,7 +188,7 @@ void wake()
 	g_per_second = 0;
 	g_mode = MODE_IDLE;
 
-	display_on();
+	oled_power_on();
 
 	// globally enable interrupts.
 	sei();
@@ -219,9 +215,9 @@ void timer_stop()
 void display_setup()
 {
 	oled_write_cmd(CMD_FUNC_CONTROL | CMD_FUNC_8BIT | CMD_FUNC_2LINES);
-	oled_write_cmd(CMD_CURSOR_HOME);
-	oled_write_cmd(CMD_CLEAR_DISPLAY);
-	oled_write_cmd(CMD_ENTRY_CONTROL | CMD_ENTRY_INCREMENT);
+	oled_cursor_home();
+	oled_clear();
+	oled_incremental_cursor();
 
 	// create the time separator character.
 	uint8_t tsep[] = {0x00, 0x04, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00};
@@ -230,18 +226,6 @@ void display_setup()
 	// create the up arrow character.
 	uint8_t uparrow[] = {0x00, 0x00, 0x00, 0x04, 0x0E, 0x1F, 0x00, 0x00};
 	oled_set_character(2, &uparrow[0]);
-}
-
-// switches the display on.
-void display_on()
-{
-	oled_write_cmd(CMD_DISPLAY_CONTROL | CMD_DISPLAY_POWER);
-}
-
-// turns the display off.
-void display_off()
-{
-	oled_write_cmd(CMD_DISPLAY_CONTROL);
 }
 
 // displays the time on row 1.
@@ -273,48 +257,48 @@ bool button1_down()
 	return (PINC & (1 << BTN0));
 }
 
-// Experimenting.
-void display_hello()
-{
-	oled_write_character('H', 1, 1);
-	oled_write_character('e', 2, 1);
-	oled_write_character('l', 3, 1);
-	oled_write_character('l', 4, 1);
-	oled_write_character('o', 5, 1);
-	oled_write_character('0', 6, 1);
-	oled_write_character('1', 7, 1);
-	oled_write_character('2', 8, 1);
-	oled_write_character('3', 9, 1);
-	oled_write_character('4', 10, 1);
-	oled_write_character('5', 11, 1);
-	oled_write_character('6', 12, 1);
-	oled_write_character('7', 13, 1);
-	oled_write_character('8', 14, 1);
-	oled_write_character('9', 15, 1);
-
-	oled_write_character('W', 1, 2);
-	oled_write_character('o', 2, 2);
-	oled_write_character('r', 3, 2);
-	oled_write_character('l', 4, 2);
-	oled_write_character('d', 5, 2);
-
-	_delay_ms(100);
-	oled_write_cmd(CMD_SHIFT_CONTROL | CMD_SHIFT_DISPLAY);
-	_delay_ms(100);
-	oled_write_cmd(CMD_SHIFT_CONTROL | CMD_SHIFT_DISPLAY);
-	_delay_ms(100);
-	oled_write_cmd(CMD_SHIFT_CONTROL | CMD_SHIFT_DISPLAY);
-	_delay_ms(100);
-	oled_write_cmd(CMD_SHIFT_CONTROL | CMD_SHIFT_DISPLAY);
-	_delay_ms(100);
-	oled_write_cmd(CMD_SHIFT_CONTROL | CMD_SHIFT_DISPLAY);
-}
-
-// Experimenting.
-void display_pixels()
-{
-	oled_write_cmd(0x36);
-	oled_write_pixel(1, 1, true);
-	oled_write_pixel(3, 1, true);
-	oled_write_pixel(5, 1, true);
-}
+//// Experimenting.
+//void display_hello()
+//{
+	//oled_write_character('H', 1, 1);
+	//oled_write_character('e', 2, 1);
+	//oled_write_character('l', 3, 1);
+	//oled_write_character('l', 4, 1);
+	//oled_write_character('o', 5, 1);
+	//oled_write_character('0', 6, 1);
+	//oled_write_character('1', 7, 1);
+	//oled_write_character('2', 8, 1);
+	//oled_write_character('3', 9, 1);
+	//oled_write_character('4', 10, 1);
+	//oled_write_character('5', 11, 1);
+	//oled_write_character('6', 12, 1);
+	//oled_write_character('7', 13, 1);
+	//oled_write_character('8', 14, 1);
+	//oled_write_character('9', 15, 1);
+//
+	//oled_write_character('W', 1, 2);
+	//oled_write_character('o', 2, 2);
+	//oled_write_character('r', 3, 2);
+	//oled_write_character('l', 4, 2);
+	//oled_write_character('d', 5, 2);
+//
+	//_delay_ms(100);
+	//oled_write_cmd(CMD_SHIFT_CONTROL | CMD_SHIFT_DISPLAY);
+	//_delay_ms(100);
+	//oled_write_cmd(CMD_SHIFT_CONTROL | CMD_SHIFT_DISPLAY);
+	//_delay_ms(100);
+	//oled_write_cmd(CMD_SHIFT_CONTROL | CMD_SHIFT_DISPLAY);
+	//_delay_ms(100);
+	//oled_write_cmd(CMD_SHIFT_CONTROL | CMD_SHIFT_DISPLAY);
+	//_delay_ms(100);
+	//oled_write_cmd(CMD_SHIFT_CONTROL | CMD_SHIFT_DISPLAY);
+//}
+//
+//// Experimenting.
+//void display_pixels()
+//{
+	////oled_write_cmd(0x37);
+	//oled_write_pixel(1, 1, true);
+	////oled_write_pixel(3, 1, true);
+	////oled_write_pixel(5, 1, true);
+//}
