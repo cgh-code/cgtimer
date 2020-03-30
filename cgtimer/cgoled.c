@@ -55,8 +55,18 @@
 // 1000 0000 (1 << 7)
 #define CMD_DDRAM 0x80
 
-// 1011 1000 (1 << 7) | (1 << 5) | (1 << 4) | (1 << 3)
-#define CMD_LINE 0xB8
+
+// Cursor/Shift/Mode/Power	(1 << 4).
+#define CMD_MODE 0x10
+
+// Graphics Mode			(1 << 3).
+#define CMD_MODE_GFX 0x08
+
+// Internal power on		(1 << 2).
+#define CMD_MODE_POWER 0x04
+
+// For graphics				(1 << 1) | 1
+#define CMD_MODE_GFX_FLAG 0x03
 
 
 // private function declarations.
@@ -103,6 +113,13 @@ void oled_incremental_cursor()
 {
 	oled_write_cmd(CMD_ENTRY_CONTROL | CMD_ENTRY_INCREMENT);
 }
+
+// switch to graphics mode.
+void oled_graphics_mode()
+{
+	oled_write_cmd(CMD_MODE | CMD_MODE_GFX | CMD_MODE_POWER | CMD_MODE_GFX_FLAG);
+}
+
 
 // switch the OLED on.
 void oled_power_on()
@@ -194,18 +211,21 @@ void oled_write_data(uint8_t data)
 	OLED_PORT_EN &= ~(1 << OLED_EN);
 }
 
-// Write pixel, not implemented.
-void oled_write_pixel(uint8_t x, uint8_t y, bool value)
+// Set the x and y coordinates for graphics.
+void oled_set_coordinates(uint8_t x, uint8_t y)
 {
 	uint8_t gxa = get_gxa_address(x);
-	//uint8_t gya = get_gya_address(0);
+	uint8_t gya = get_gya_address(y);
 
-	oled_write_cmd(CMD_LINE | 0x00);
 	oled_write_cmd(gxa);
-	//oled_write_data(gya);
+	oled_write_cmd(gya);
+}
 
-	// set page address
-	// set column address
+// Write pixels.
+void oled_write_pixels_at(uint8_t x, uint8_t y, uint8_t pixels)
+{
+	oled_set_coordinates(x, y);
+	oled_write_data(pixels);
 }
 
 
@@ -291,7 +311,7 @@ uint8_t get_ddram_address_n1(uint8_t column_n, uint8_t row_n)
 		addr = 0x40;
 	}
 
-	if (column_n >= 1 && column_n <= 40)
+	if (column_n > 1 && column_n <= 40)
 	{
 		addr |= (column_n - 1);
 	}
@@ -303,12 +323,12 @@ uint8_t get_cgram_address(uint8_t char_n, uint8_t row_n)
 {
 	uint8_t addr = 0x00;
 
-	if (char_n >= 1 && char_n <= 8)
+	if (char_n > 1 && char_n <= 8)
 	{
 		addr |= ((char_n - 1) << 3);
 	}
 
-	if (row_n >= 1 && row_n <= 8)
+	if (row_n > 1 && row_n <= 8)
 	{
 		addr |= (row_n - 1);
 	}
@@ -321,7 +341,7 @@ uint8_t get_gxa_address(uint8_t x)
 	// 1000 0000 (1 << 7)
 	uint8_t addr = 0x80;
 
-	if (x >= 1 && x <= OLED_PIXEL_COLUMNS)
+	if (x > 1 && x <= OLED_PIXEL_COLUMNS)
 	{
 		addr |= (x - 1);
 	}
@@ -334,7 +354,7 @@ uint8_t get_gya_address(uint8_t cga)
 	// 0100 0000 (1 << 6)
 	uint8_t addr = 0x40;
 
-	if (cga == 1)
+	if (cga == 2)
 	{
 		addr |= 1;
 	}

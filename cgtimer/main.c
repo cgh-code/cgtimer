@@ -33,6 +33,9 @@
 #define MODE_IDLE 1
 #define MODE_COUNT 2
 
+// zero character 8x5 (5 columns) pixels.
+static uint8_t zero[] = { 0x3E, 0x51, 0x49, 0x45, 0x3E };
+
 // function declarations.
 void config_buttons();
 void config_timer();
@@ -43,7 +46,7 @@ void display_mode(uint8_t per_second);
 bool button1_down();
 
 //void display_hello();
-//void display_pixels();
+void display_pixels();
 
 void sleep();
 void wake();
@@ -98,6 +101,7 @@ int main(void)
 	display_setup();
 	display_time(g_count_seconds);
 	oled_power_on();
+	//display_pixels();
 
 	config_timer();
 
@@ -294,11 +298,29 @@ bool button1_down()
 	//oled_write_cmd(CMD_SHIFT_CONTROL | CMD_SHIFT_DISPLAY);
 //}
 //
-//// Experimenting.
-//void display_pixels()
-//{
-	////oled_write_cmd(0x37);
-	//oled_write_pixel(1, 1, true);
-	////oled_write_pixel(3, 1, true);
-	////oled_write_pixel(5, 1, true);
-//}
+// Experimenting.
+void display_pixels()
+{
+	oled_graphics_mode();
+	oled_clear();
+	//oled_write_pixels_at(1, 1, 0x07);
+	//oled_write_data(0x07);
+	//oled_write_data(0x07);
+	//oled_write_data(0x07);
+
+	// top left.
+	oled_set_coordinates(1, 1);
+
+	for (uint8_t c = 0; c != 4; c++)
+	{
+		if (c != 0)
+			oled_write_data(0x00);
+
+		for (uint8_t n = 0; n != 5; n++)
+		{
+			oled_write_data(zero[n]);
+		}
+	}
+
+	oled_write_cmd(CMD_FUNC_CONTROL | CMD_FUNC_8BIT | CMD_FUNC_2LINES);
+}

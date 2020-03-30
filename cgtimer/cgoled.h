@@ -109,7 +109,7 @@
 #define CMD_FUNC_8BIT 0x10
 #define CMD_FUNC_2LINES 0x08
 #define CMD_FUNC_FONT_10X7 0x4
-#define CMD_GFX_MODE 0x2
+//#define CMD_GFX_MODE 0x2
 
 // Sets the ports using the defines declared in the header file.
 void oled_init();
@@ -122,6 +122,9 @@ void oled_cursor_home();
 
 // Switch to incremental cursor mode.
 void oled_incremental_cursor();
+
+// switch to graphics mode.
+void oled_graphics_mode();
 
 // switch the OLED on.
 void oled_power_on();
@@ -148,5 +151,8 @@ void oled_write_cmd_busy(uint8_t command, bool wait_for_bf);
 // Writes the given data to DDRAM or CGRAM.
 void oled_write_data(uint8_t data);
 
-// Write pixel, not implemented.
-void oled_write_pixel(uint8_t x, uint8_t y, bool value);
+// Set the x and y coordinates for graphics.  Top left is 1,1.
+void oled_set_coordinates(uint8_t x, uint8_t y);
+
+// Write pixels.
+void oled_write_pixels_at(uint8_t x, uint8_t y, uint8_t pixels);
