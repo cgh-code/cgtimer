@@ -139,6 +139,12 @@
     <Compile Include="cgoled.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="gfx.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="gfx.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>

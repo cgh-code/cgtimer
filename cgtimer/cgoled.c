@@ -2,8 +2,15 @@
  * cgoled.c
  *
  * Created: 2020
- * Author: Chris Hough
- */ 
+ * Author:  Chris Hough
+ *
+ * Functions that provide access to the capabilities of the MC0010 controller,
+ * used in the Midas and Vishay OLED displays.
+ *
+ * https://uk.farnell.com/midas/mcob050016av-bp/display-oled-graphic-cob-50x16/dp/2769654?CMP=i-bf9f-00001000
+ * https://uk.farnell.com/vishay/o100h016egpp5n0000/display-oled-graphic-100x16-pixels/dp/2769925?CMP=i-bf9f-00001000
+ *
+ */
 
 #include "cgoled.h"
 #include <avr/io.h>
@@ -211,7 +218,9 @@ void oled_write_data(uint8_t data)
 	OLED_PORT_EN &= ~(1 << OLED_EN);
 }
 
-// Set the x and y coordinates for graphics.
+// Set the x and y coordinates for graphics.  Top left is 1,1.
+// note:  the y co-ordinates are multiples of 8.
+// eg. y:1 is 1, y:2 = 9.
 void oled_set_coordinates(uint8_t x, uint8_t y)
 {
 	uint8_t gxa = get_gxa_address(x);
@@ -221,7 +230,8 @@ void oled_set_coordinates(uint8_t x, uint8_t y)
 	oled_write_cmd(gya);
 }
 
-// Write pixels.
+// write pixels at the given x and y co-ordinates.
+// note:  the y co-ordinates are multiples of 8.
 void oled_write_pixels_at(uint8_t x, uint8_t y, uint8_t pixels)
 {
 	oled_set_coordinates(x, y);
