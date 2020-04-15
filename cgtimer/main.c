@@ -17,22 +17,37 @@
 #include "time.h"
 #include "cgoled.h"
 #include "gfx.h"
+#include "machine.h"
 
-#define BTN0 PC5
-
-// timer of 10 bits ... 1024
-//#define PRESCALER 10
-#define PRESCALER 11	// 11 bits 1/2 second
-
-// 1 Mhz clock
-#define CLOCK_RATE 1000000
-
-// roughly the number of timer ticks in a second.
-#define COUNTER_VALUE (CLOCK_RATE >> PRESCALER)
-
+// circuit modes.
 #define MODE_SLEEP 0
 #define MODE_IDLE 1
 #define MODE_COUNT 2
+
+// buttons.
+#define BTN0 PC5
+#define BTN1 PC4
+#define BTN2 PC3
+
+//#define PRESCALER 10
+
+// timer1
+// 10 bits ... 1024 (1 second)
+// 11 bits ...      (1/2 second)
+// 1 MHz clock
+#define PRESCALER 11	
+#define CLOCK_RATE 1000000
+
+// roughly the number of timer ticks in half a second.
+#define COUNTER_VALUE (CLOCK_RATE >> PRESCALER)
+
+// global mode.
+uint8_t g_mode = MODE_IDLE;
+
+// globals set by the timer.
+uint16_t g_timer_secs = 00;
+uint16_t g_timer_idle_secs = 0;
+uint8_t g_timer_interval = 0;
 
 // characters 8x5 (5 columns) pixels.
 static uint8_t space[] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
@@ -48,60 +63,46 @@ static uint8_t eight[] = { 0x36, 0x49, 0x49, 0x49, 0x36 };
 static uint8_t nine[] = { 0x06, 0x49, 0x49, 0x29, 0x1E };
 
 // function declarations.
-void config_buttons();
-void config_timer();
-
-void display_setup();
+void config_buttons(void);
+void config_timer(void);
+void display_setup(void);
 void display_time(uint16_t seconds);
-void display_mode(uint8_t per_second);
-bool button1_down();
+void display_time_separator(void);
+void clear_time_separator(void);
 
-//void display_hello();
-void display_pixels();
-uint8_t const * const digit_addr(uint8_t digit);
+bool button1_down(void);
+uint8_t const * const digit_ptr(uint8_t digit);
 
-void sleep();
-void wake();
-void timer_start();
-void timer_stop();
+void sleep(void);
+void wake(void);
+void timer_start(void);
+void timer_stop(void);
+void timer_clear(void);
 
-
-uint8_t g_mode = MODE_IDLE;
-uint8_t g_per_second = 0;
-uint16_t g_idle_seconds = 0;
-uint16_t g_count_seconds = 0;
+//PORTB ^= _BV(PORTB5);
 
 // Interrupt service routine.
 // When timer1 comparison routine matches the value.
-//PORTB ^= _BV(PORTB5);
 ISR(TIMER1_COMPA_vect)
 {
-	++g_per_second;
-	if (g_per_second > 2)
-		g_per_second = 1;
-
-	if (g_per_second == 2)
+	if (g_timer_interval == 0)
 	{
+		// half a second.
+		g_timer_interval = 1;
+	}
+	else
+	{
+		// second.
+		g_timer_interval = 0;
+
 		if (g_mode == MODE_IDLE)
 		{
-			// sleep after 10 seconds.
-			g_idle_seconds++;
-		
-			if (g_idle_seconds >= 10)
-			{
-				sleep();
-			}
+			g_timer_idle_secs++;
 		}
 		else if (g_mode == MODE_COUNT)
 		{
-			g_count_seconds++;
-			display_time(g_count_seconds);
-		}
-	}
-
-	if (g_mode == MODE_COUNT)
-	{
-		display_mode(g_per_second);
+			g_timer_secs++;
+		}	
 	}
 }
 
@@ -112,16 +113,35 @@ int main(void)
 	config_buttons();
 
 	display_setup();
-	display_time(g_count_seconds);
+	display_time(g_timer_secs);
+	//display_frame();
+	//display_image();
 	oled_power_on();
-	//display_pixels();
 
 	config_timer();
 
 	bool btn1_down_state = false;
+	uint16_t timer_secs = 0;
+	uint8_t timer_interval = 0;
 
     while (1) 
     {
+		// display the time
+		if (g_mode == MODE_COUNT)
+		{
+			if (timer_secs != g_timer_secs)
+			{
+				timer_secs = g_timer_secs;
+				timer_interval = g_timer_interval;
+				display_time(timer_secs);
+			}
+			else if (timer_interval != g_timer_interval)
+			{
+				timer_interval = g_timer_interval;
+				clear_time_separator();
+			}
+		}
+		
 		if (button1_down())
 		{
 			// wait until button is released before processing another press.
@@ -155,13 +175,43 @@ int main(void)
 	}
 }
 
-void config_buttons()
+// alternative main.
+// -----------------
+// let the interrupts set variables only.  Making the interrupts as quick/short as possible.
+// process the interrupt variables each main loop cycle.
+//
+// Process button has been pressed (global button pressed count != 0). 
+//	  a. copy the global count to local variable.
+//	  b. decrease the global count.  global count -= local count.  (incase it get increased by an interrupt while processing.)
+//    c. Determine the new mode by the local count. 
+//       Mode sequence: SLEEP -> IDLE -> COUNT -> IDLE -> COUNT -> IDLE.
+//   
+//
+//
+// MODE_COUNT ->
+//    When the seconds change (global seconds != local copy of seconds) : -
+//    a. save a local copy of the global seconds.  (use local as global may change)
+//    b. show the time using the local copy of the seconds.
+//
+// MODE_IDLE ->
+//    When the global idle seconds > sleep seconds.
+//    a. switch off the display.
+//    b. change mode to MODE_SLEEP.
+//
+// MODE_SLEEP ->
+//	  Do nothing.
+//
+
+
+void config_buttons(void)
 {
-	// setup button for input.
+	// setup buttons for input.
 	DDRC &= ~(1 << BTN0);
+	DDRC &= ~(1 << BTN1);
+	DDRC &= ~(1 << BTN2);
 }
 
-void config_timer()
+void config_timer(void)
 {
 	// output compare register for timer1.
 	OCR1A = COUNTER_VALUE;
@@ -187,49 +237,53 @@ void config_timer()
 	sei();
 }
 
-void sleep()
+void sleep(void)
 {
 	// globally disable interrupts.
 	cli();
 
-	g_idle_seconds = 0;
-	g_per_second = 0;
 	g_mode = MODE_SLEEP;
-
+	timer_clear();
 	oled_power_off();
 }
 
-void wake()
+void wake(void)
 {
-	g_idle_seconds = 0;
-	g_per_second = 0;
 	g_mode = MODE_IDLE;
-
+	timer_clear();
 	oled_power_on();
 
 	// globally enable interrupts.
 	sei();
 }
 
-void timer_start()
+void timer_start(void)
 {
 	g_mode = MODE_COUNT;
+	timer_clear();
 }
 
-void timer_stop()
+void timer_stop(void)
 {
-	g_idle_seconds = 0;
-	g_per_second = 0;
 	g_mode = MODE_IDLE;
+	timer_clear();
+	display_time_separator();
+}
+
+void timer_clear(void)
+{
+	g_timer_interval = 0;
+	g_timer_idle_secs = 0;
 }
 
 // configures the display to: -
 // 2 rows of characters.
-// 5 x 7 pixel characters.
-// 8 bit mode.
-// auto increment cursor position after writing a character.
+// characters size of 5 x 7 pixels.
+// use 8 bit mode (requires 8 pins for databus).
+// auto increment cursor position after writing a character or pixels.
+// switches the display to graphics mode which makes the character modes irrelevant until mode is switched.
 //
-void display_setup()
+void display_setup(void)
 {
 	oled_write_cmd(CMD_FUNC_CONTROL | CMD_FUNC_8BIT | CMD_FUNC_2LINES);
 	oled_cursor_home();
@@ -242,41 +296,41 @@ void display_setup()
 	//oled_set_character(2, &uparrow[0]);
 }
 
-// displays the time on row 1.
+// displays the time vertical centered. (16 pixels in Y axis).
 void display_time(uint16_t seconds)
 {
 	time t = seconds_to_time(seconds);
 
-	gfx_character_at(13, 6, digit_addr(t.mins / 10));
-	gfx_character_at(19, 6, digit_addr(t.mins % 10));
+	gfx_image_at(13, 6, digit_ptr(t.mins / 10), 5);
+	gfx_image_at(19, 6, digit_ptr(t.mins % 10), 5);
 
+	display_time_separator();
+
+	gfx_image_at(27, 6, digit_ptr(t.secs/ 10), 5);
+	gfx_image_at(33, 6, digit_ptr(t.secs % 10), 5);
+}
+
+// displays the time separator symbol.
+void display_time_separator(void)
+{
 	gfx_pixels_at(25, 6, 0x22);
-
-	gfx_character_at(27, 6, digit_addr(t.secs/ 10));
-	gfx_character_at(33, 6, digit_addr(t.secs % 10));
 }
 
-// displays the flashing count down symbol.
-void display_mode(uint8_t per_second)
+// clears the time separator symbol.
+void clear_time_separator(void)
 {
-	if (per_second == 1)
-	{
-		oled_write_pixels_at(25, 1, 0x00);
-		oled_write_pixels_at(25, 2, 0x00);
-	}
-
-	else if (per_second == 2)
-	{
-		gfx_pixels_at(25, 6, 0x22);
-	}
+	oled_write_pixels_at(25, 1, 0x00);
+	oled_write_pixels_at(25, 2, 0x00);
 }
 
-bool button1_down()
+// returns true when button 1 is pressed.
+bool button1_down(void)
 {
-	return (PINC & (1 << BTN0));
+	return !(PINC & (1 << BTN0));
 }
 
-uint8_t const * const digit_addr(uint8_t digit)
+// returns pointer to digit.
+uint8_t const * const digit_ptr(uint8_t digit)
 {
 	uint8_t const * addr = &space[0];
 
@@ -326,25 +380,3 @@ uint8_t const * const digit_addr(uint8_t digit)
 	return addr;
 }
 
-
-// Experimenting.
-void display_pixels()
-{
-	oled_graphics_mode();
-	oled_clear();
-
-
-	gfx_character_at(1, 3, &zero[0]);
-	_delay_ms(15);
-	gfx_character_at(1, 3, &space[0]);
-
-	gfx_character_at(7, 5, &zero[0]);
-	_delay_ms(15);
-	gfx_character_at(7, 3, &space[0]);
-
-	gfx_character_at(13, 7, &zero[0]);
-	_delay_ms(15);
-	gfx_character_at(13, 3, &space[0]);
-
-	gfx_character_at(19, 9, &zero[0]);
-}

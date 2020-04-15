@@ -219,22 +219,23 @@ void oled_write_data(uint8_t data)
 }
 
 // Set the x and y coordinates for graphics.  Top left is 1,1.
-// note:  the y co-ordinates are multiples of 8.
-// eg. y:1 is 1, y:2 = 9.
-void oled_set_coordinates(uint8_t x, uint8_t y)
+// note:  the cy co-ordinate is multiple of 8 pixels.
+// eg. cy:1  y=1,
+//     cy:2  y=9.
+void oled_set_coordinates(uint8_t x, uint8_t cy)
 {
 	uint8_t gxa = get_gxa_address(x);
-	uint8_t gya = get_gya_address(y);
+	uint8_t gya = get_gya_address(cy);
 
 	oled_write_cmd(gxa);
 	oled_write_cmd(gya);
 }
 
 // write pixels at the given x and y co-ordinates.
-// note:  the y co-ordinates are multiples of 8.
-void oled_write_pixels_at(uint8_t x, uint8_t y, uint8_t pixels)
+// note:  the cy co-ordinate is multiple of 8 pixels.
+void oled_write_pixels_at(uint8_t x, uint8_t cy, uint8_t pixels)
 {
-	oled_set_coordinates(x, y);
+	oled_set_coordinates(x, cy);
 	oled_write_data(pixels);
 }
 
