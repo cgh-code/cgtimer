@@ -71,6 +71,7 @@ void display_time_separator(void);
 void clear_time_separator(void);
 
 bool button1_down(void);
+bool button2_down(void);
 uint8_t const * const digit_ptr(uint8_t digit);
 
 void sleep(void);
@@ -113,14 +114,15 @@ int main(void)
 	config_buttons();
 
 	display_setup();
-	display_time(g_timer_secs);
-	//display_frame();
-	//display_image();
 	oled_power_on();
+	//display_time(g_timer_secs);
+	display_frame();
+	display_bars();
 
 	config_timer();
 
 	bool btn1_down_state = false;
+	bool btn2_down_state = false;
 	uint16_t timer_secs = 0;
 	uint8_t timer_interval = 0;
 
@@ -169,6 +171,25 @@ int main(void)
 			if (btn1_down_state)
 			{
 				btn1_down_state = false;
+				_delay_ms(20);
+			}
+		}
+		
+		if (button2_down())
+		{
+			// wait until button is released before processing another press.
+			if (!btn2_down_state)
+			{
+				btn2_down_state = true;
+				roll_bars();
+			}
+		}
+		else
+		{
+			// button is currently released.
+			if (btn2_down_state)
+			{
+				btn2_down_state = false;
 				_delay_ms(20);
 			}
 		}
@@ -261,6 +282,7 @@ void timer_start(void)
 {
 	g_mode = MODE_COUNT;
 	timer_clear();
+	oled_clear();
 }
 
 void timer_stop(void)
@@ -327,6 +349,12 @@ void clear_time_separator(void)
 bool button1_down(void)
 {
 	return !(PINC & (1 << BTN0));
+}
+
+// returns true when button 1 is pressed.
+bool button2_down(void)
+{
+	return !(PINC & (1 << BTN1));
 }
 
 // returns pointer to digit.

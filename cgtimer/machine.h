@@ -11,5 +11,5 @@
 #endif /* MACHINE_H_ */
 
 void display_frame(void);
-void display_image(void);
-
+void display_bars(void);
+void roll_bars(void);
