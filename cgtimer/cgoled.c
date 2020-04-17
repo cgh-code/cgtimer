@@ -85,7 +85,7 @@ uint8_t get_gxa_address(uint8_t x);
 uint8_t get_gya_address(uint8_t cga);
 
 // Sets the ports using the defines declared in the header file.
-void oled_init()
+void oled_config()
 {
 	// setup port D pins for output.
 	OLED_DDR_DB0 |= (1 << OLED_DB0);
@@ -107,6 +107,21 @@ void oled_init()
 void oled_clear()
 {
 	oled_write_cmd(CMD_CLEAR_DISPLAY);
+}
+
+void oled_blank()
+{
+	oled_set_coordinates(1, 1);
+	for (uint8_t i = 0; i != 50; i++)
+	{
+		oled_write_data(0x00);
+	}
+
+	oled_set_coordinates(1, 2);
+	for (uint8_t i = 0; i != 50; i++)
+	{
+		oled_write_data(0x00);
+	}
 }
 
 // sets the cursor back to home (top left).

@@ -175,6 +175,12 @@
     <Compile Include="time.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="timer.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="timer.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="vgfx.c">
       <SubType>compile</SubType>
     </Compile>

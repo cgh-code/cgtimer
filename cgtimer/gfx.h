@@ -26,6 +26,8 @@
 #define GFX_H_
 #endif /* GFX_H_ */
 
+#include <stdint.h>
+
 // displays a single column of 8 pixel rows at the given pixel co-ordinates.
 void gfx_pixels_at(uint8_t x, uint8_t y, uint8_t pixels);
 

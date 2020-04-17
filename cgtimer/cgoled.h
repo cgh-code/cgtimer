@@ -119,10 +119,12 @@
 //#define CMD_GFX_MODE 0x2
 
 // Sets the ports using the defines declared in the header file.
-void oled_init();
+void oled_config();
 
 // clears the display.
 void oled_clear();
+
+void oled_blank();
 
 // sets the cursor back to home (top left).
 void oled_cursor_home();

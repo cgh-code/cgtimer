@@ -10,6 +10,8 @@
 #define MACHINE_H_
 #endif /* MACHINE_H_ */
 
-void display_frame(void);
-void display_bars(void);
-void roll_bars(void);
+//#include <stdint.h>
+
+void slot_show(void);
+void slot_action(void);
+//void slot_snapshot(uint8_t * buffer);

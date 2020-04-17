@@ -6,12 +6,13 @@
  *
  */ 
 
- #include "cgoled.h"
+#include "gfx.h"
+#include "cgoled.h"
 
- #define MAX_ROWS 2
+#define MAX_ROWS 2
 
 // function declarations.
- void set_cy_shiftn(uint8_t y, uint8_t * cy, uint8_t * shift_n);
+void set_cy_shiftn(uint8_t y, uint8_t * cy, uint8_t * shift_n);
 
 
 // displays a single column of 8 pixel rows at the given pixel co-ordinates.
