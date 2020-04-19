@@ -11,6 +11,7 @@
 
 #include "machine.h"
 #include <stdint.h>
+#include <stdlib.h>
 #include <util/delay.h>
 #include "vgfx.h"
 #include "cgoled.h"
@@ -107,11 +108,15 @@ void slot_action(void)
 	// generate 3 random numbers with range 0 to 11 to supply to roll_bars.
 	// temporary using literals.
 	
-	roll_bars(2, 0, 3);
+	uint8_t idx1 = rand() % 11;
+	uint8_t idx2 = rand() % 11;
+	uint8_t idx3 = rand() % 11;
 	
-	g_bar1_idx = 2;
-	g_bar2_idx = 0;
-	g_bar3_idx = 3;
+	roll_bars(idx1, idx2, idx3);
+	
+	g_bar1_idx = idx1;
+	g_bar2_idx = idx2;
+	g_bar3_idx = idx3;
 
 	uint8_t img1 = g_bar1[g_bar1_idx];
 	uint8_t img2 = g_bar2[g_bar2_idx];

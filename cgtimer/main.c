@@ -126,6 +126,30 @@ int main(void)
 				_delay_ms(20);
 			}
 		}
+
+		if (button3_down())
+		{
+			// wait until button is released before processing another press.
+			if (!btn3_down_state)
+			{
+				btn3_down_state = true;
+				
+				if (g_app == APP_TIMER)
+				{
+					timer_switch();
+				}
+			}
+		}
+		else
+		{
+			// button is currently released.
+			if (btn3_down_state)
+			{
+				btn3_down_state = false;
+				_delay_ms(20);
+			}
+		}
+
 	}
 }
 

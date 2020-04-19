@@ -18,6 +18,9 @@
 #define MODE_IDLE 1
 #define MODE_COUNT 2
 
+#define MODE_DISPLAY_TIME 0
+#define MODE_DISPLAY_NUMBER 1
+
 // timer1
 // 10 bits ... 1024 (1 second)
 // 11 bits ...      (1/2 second)
@@ -40,12 +43,14 @@ static const uint8_t g_six[] = { 0x3C, 0x4A, 0x49, 0x49, 0x30 };
 static const uint8_t g_seven[] = { 0x01, 0x01, 0x71, 0x0D, 0x03 };
 static const uint8_t g_eight[] = { 0x36, 0x49, 0x49, 0x49, 0x36 };
 static const uint8_t g_nine[] = { 0x06, 0x49, 0x49, 0x29, 0x1E };
+static const uint8_t g_comma[] = { 0x80, 0x40 };
 
 // global mode.
 static uint8_t g_mode = MODE_IDLE;
+static uint8_t g_display = MODE_DISPLAY_TIME;
 
 // globals set by the timer.
-static uint16_t g_timer_secs = 00;
+static uint16_t g_timer_secs = 0;
 static uint16_t g_timer_idle_secs = 0;
 static uint8_t g_timer_interval = 0;
 
@@ -57,6 +62,7 @@ void timer_stop(void);
 void timer_clear(void);
 void display_time(uint16_t seconds);
 void display_time_separator(void);
+void display_number(uint16_t seconds);
 void clear_time_separator(void);
 uint8_t const * const digit_ptr(uint8_t digit);
 
@@ -115,7 +121,17 @@ ISR(TIMER1_COMPA_vect)
 void timer_show(void)
 {
 	oled_blank();
-	display_time(g_timer_secs);
+	
+	uint16_t timer_secs = g_timer_secs;
+	
+	if (g_display == MODE_DISPLAY_TIME)
+	{
+		display_time(timer_secs);
+	}
+	else
+	{
+		display_number(timer_secs);	
+	}
 }
 
 
@@ -131,14 +147,21 @@ void timer_process(void)
 		{
 			timer_secs = g_timer_secs;
 			timer_interval = g_timer_interval;
-			display_time(timer_secs);
+				
+			if (g_display == MODE_DISPLAY_TIME)
+				display_time(timer_secs);
+			else
+				display_number(timer_secs);
+				
 		}
 		else if (timer_interval != g_timer_interval)
 		{
 			timer_interval = g_timer_interval;
-			clear_time_separator();
-		}
-	}
+				
+			if (g_display == MODE_DISPLAY_TIME)
+				clear_time_separator();
+		}		
+	}	
 }
 
 void timer_action(void)
@@ -156,6 +179,21 @@ void timer_action(void)
 		timer_stop();
 	}
 }
+
+void timer_switch(void)
+{
+	if (g_display == MODE_DISPLAY_TIME)
+	{
+		g_display = MODE_DISPLAY_NUMBER;
+	}	
+	else
+	{
+		g_display = MODE_DISPLAY_TIME;
+	}
+	
+	timer_show();
+}
+
 
 //void timer_snapshot(uint8_t * buffer)
 //{
@@ -199,7 +237,9 @@ void timer_stop(void)
 {
 	g_mode = MODE_IDLE;
 	timer_clear();
-	display_time_separator();
+	
+	if (g_display == MODE_DISPLAY_TIME)
+		display_time_separator();
 }
 
 void timer_clear(void)
@@ -213,26 +253,58 @@ void display_time(uint16_t seconds)
 {
 	time t = seconds_to_time(seconds);
 
-	gfx_image_at(13, 6, digit_ptr(t.mins / 10), 5);
-	gfx_image_at(19, 6, digit_ptr(t.mins % 10), 5);
+	gfx_image_at(21, 6, digit_ptr(t.mins / 10), 5);
+	gfx_image_at(27, 6, digit_ptr(t.mins % 10), 5);
 
 	display_time_separator();
 
-	gfx_image_at(27, 6, digit_ptr(t.secs/ 10), 5);
-	gfx_image_at(33, 6, digit_ptr(t.secs % 10), 5);
+	gfx_image_at(35, 6, digit_ptr(t.secs/ 10), 5);
+	gfx_image_at(41, 6, digit_ptr(t.secs % 10), 5);
+}
+
+// displays the time vertical centered. (16 pixels in Y axis).
+void display_number(uint16_t seconds)
+{
+	uint16_t secs = seconds;
+	
+	if (seconds >= 10000)
+	{
+		uint8_t ten_thousands = secs / 10000;
+		gfx_image_at(14, 6, digit_ptr(ten_thousands), 5);
+		secs -= (ten_thousands * 10000);
+	}
+
+	if (seconds >= 1000)
+	{
+		uint8_t thousands = secs / 1000;
+		gfx_image_at(20, 6, digit_ptr(thousands), 5);
+		secs -= (thousands * 1000);
+
+		gfx_image_at(26, 6, &g_comma[0], 2);
+	}
+	
+	uint8_t hundreds = secs / 100;
+	gfx_image_at(29, 6, digit_ptr(hundreds), 5);
+	secs -= (hundreds * 100);	
+
+	uint8_t tens = secs / 10;
+	gfx_image_at(35, 6, digit_ptr(tens), 5);
+	secs -= (tens * 10);
+	
+	gfx_image_at(41, 6, digit_ptr(secs), 5);
 }
 
 // displays the time separator symbol.
 void display_time_separator(void)
 {
-	gfx_pixels_at(25, 6, 0x22);
+	gfx_pixels_at(33, 6, 0x22);
 }
 
 // clears the time separator symbol.
 void clear_time_separator(void)
 {
-	oled_write_pixels_at(25, 1, 0x00);
-	oled_write_pixels_at(25, 2, 0x00);
+	oled_write_pixels_at(33, 1, 0x00);
+	oled_write_pixels_at(33, 2, 0x00);
 }
 
 // returns pointer to digit.
