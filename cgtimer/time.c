@@ -7,9 +7,10 @@
 
 #include "time.h"
 
-time seconds_to_time(uint16_t seconds)
+// convert a number of seconds to a time structure.
+time_t seconds_to_time(uint16_t seconds)
 {
-	time t = {0,0,0};
+	time_t t = {0,0,0};
 	
 	if (seconds >= 3600)
 	{
@@ -30,18 +31,30 @@ time seconds_to_time(uint16_t seconds)
 	return t;
 }
 
-time_unit time_unit_to_chars(uint8_t unit)
+// convert a number of seconds to a base 10 structure.
+secs_base10_t seconds_to_base10(uint16_t seconds)
 {
-	time_unit time_chars = {0x30, 0x30};
-
-	if (unit > 0)
+	secs_base10_t secs = { 0, 0, 0, 0, 0 };
+	
+	if (seconds >= 10000)
 	{
-		uint8_t tens = unit / 10;
-		uint8_t units = unit % 10;
-
-		time_chars.tens += tens;
-		time_chars.units += units;
+		secs.ten_thousands = seconds / 10000;
+		seconds -= (secs.ten_thousands * 10000);
 	}
 
-	return time_chars;
- }
+	if (seconds >= 1000)
+	{
+		secs.thousands = seconds / 1000;
+		seconds -= (secs.thousands * 1000);
+	}
+	
+	secs.hundreds = seconds / 100;
+	seconds -= (secs.hundreds * 100);
+
+	secs.tens = seconds / 10;
+	seconds -= (secs.tens * 10);
+
+	secs.units = seconds;
+	
+	return secs;
+}

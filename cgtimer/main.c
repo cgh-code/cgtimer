@@ -15,7 +15,7 @@
 #include <avr/io.h>
 #include "cgoled.h"
 #include "timer.h"
-#include "machine.h"
+#include "slotmachine.h"
 //#include "vgfx.h"   // temporary
 
 // buttons.

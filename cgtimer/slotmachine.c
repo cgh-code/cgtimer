@@ -9,7 +9,7 @@
 #define F_CPU 1000000UL		// define it now as 1 MHz unsigned long
 #endif
 
-#include "machine.h"
+#include "slotmachine.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <util/delay.h>

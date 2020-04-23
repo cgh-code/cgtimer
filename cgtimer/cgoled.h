@@ -15,13 +15,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifndef F_CPU				// if F_CPU was not defined in Project -> Properties
-#define F_CPU 1000000UL		// define it now as 1 MHz unsigned long
-#endif
-
 #ifndef CGOLED_H_
 #define CGOLED_H_
-#endif /* CGOLED_H_ */
 
 // user definable data direction register mapping (input or output).
 #define OLED_DDR_DB0 DDRD
@@ -65,9 +60,10 @@
 #define OLED_RW PB1
 #define OLED_EN PB0
 
-
+// Set the pixel columns and row to match the OLED display.
 #define OLED_PIXEL_COLUMNS 50
 #define OLED_PIXEL_ROWS    16
+#define OLED_BYTE_ROWS (OLED_PIXEL_ROWS / 8)
 
 // Command bits used to control the OLED.
 // Used as arguments when calling oled_write_cmd().
@@ -121,9 +117,11 @@
 // Sets the ports using the defines declared in the header file.
 void oled_config();
 
-// clears the display.
+// clears the display using the hardware feature.
+// seems a little slow.
 void oled_clear();
 
+// fills the entire display with off pixels to clear the display.
 void oled_blank();
 
 // sets the cursor back to home (top left).
@@ -169,3 +167,5 @@ void oled_set_coordinates(uint8_t x, uint8_t cy);
 // write pixels at the given x and y co-ordinates.
 // note:  the cy co-ordinate is multiple of 8 pixels.
 void oled_write_pixels_at(uint8_t x, uint8_t cy, uint8_t pixels);
+
+#endif /* CGOLED_H_ */

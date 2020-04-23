@@ -15,6 +15,10 @@
 #include "cgoled.h"
 #include <avr/io.h>
 
+#ifndef F_CPU				// if F_CPU was not defined in Project -> Properties
+#define F_CPU 1000000UL		// define it now as 1 MHz unsigned long
+#endif
+
 
 // Note. Example addresses below are hex.
 
@@ -103,24 +107,24 @@ void oled_config()
 	OLED_DDR_EN |= (1 << OLED_EN);
 }
 
-// clears the display.
+// clears the display using the hardware feature.
+// seems a little slow.
 void oled_clear()
 {
 	oled_write_cmd(CMD_CLEAR_DISPLAY);
 }
 
+// fills the entire display with off pixels to clear the display.
 void oled_blank()
 {
-	oled_set_coordinates(1, 1);
-	for (uint8_t i = 0; i != 50; i++)
+	for (uint8_t row = 0; row != OLED_BYTE_ROWS; ++row)
 	{
-		oled_write_data(0x00);
-	}
+		oled_set_coordinates(1, row + 1);
 
-	oled_set_coordinates(1, 2);
-	for (uint8_t i = 0; i != 50; i++)
-	{
-		oled_write_data(0x00);
+		for (uint8_t i = 0; i != OLED_PIXEL_COLUMNS; i++)
+		{
+			oled_write_data(0x00);
+		}		
 	}
 }
 

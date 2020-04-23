@@ -11,6 +11,7 @@
 #include "time.h"
 #include "gfx.h"
 #include "cgoled.h"
+#include "numeric5x8.h"
 //#include "vgfx.h"
 
 // timer modes.
@@ -30,19 +31,8 @@
 #define CLOCK_RATE 1000000
 #define COUNTER_VALUE (CLOCK_RATE >> PRESCALER)
 
-
 // characters 8x5 (5 columns) pixels.
 static const uint8_t g_space[] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
-static const uint8_t g_zero[] = { 0x3E, 0x51, 0x49, 0x45, 0x3E };
-static const uint8_t g_one[] = { 0x00, 0x42, 0x7F, 0x40, 0x00 };
-static const uint8_t g_two[] = { 0x42, 0x61, 0x51, 0x49, 0x46 };
-static const uint8_t g_three[] = { 0x21, 0x41, 0x45, 0x4B, 0x31 };
-static const uint8_t g_four[] = { 0x18, 0x14, 0x12, 0x7F, 0x10 };
-static const uint8_t g_five[] = { 0x27, 0x45, 0x45, 0x45, 0x39 };
-static const uint8_t g_six[] = { 0x3C, 0x4A, 0x49, 0x49, 0x30 };
-static const uint8_t g_seven[] = { 0x01, 0x01, 0x71, 0x0D, 0x03 };
-static const uint8_t g_eight[] = { 0x36, 0x49, 0x49, 0x49, 0x36 };
-static const uint8_t g_nine[] = { 0x06, 0x49, 0x49, 0x29, 0x1E };
 static const uint8_t g_comma[] = { 0x80, 0x40 };
 
 // global mode.
@@ -64,8 +54,6 @@ void display_time(uint16_t seconds);
 void display_time_separator(void);
 void display_number(uint16_t seconds);
 void clear_time_separator(void);
-uint8_t const * const digit_ptr(uint8_t digit);
-
 
 void timer_config(void)
 {
@@ -251,47 +239,34 @@ void timer_clear(void)
 // displays the time vertical centered. (16 pixels in Y axis).
 void display_time(uint16_t seconds)
 {
-	time t = seconds_to_time(seconds);
+	time_t t = seconds_to_time(seconds);
 
-	gfx_image_at(21, 6, digit_ptr(t.mins / 10), 5);
-	gfx_image_at(27, 6, digit_ptr(t.mins % 10), 5);
+	gfx_image_at(21, 6, digit5x8_ptr(t.mins / 10), 5);
+	gfx_image_at(27, 6, digit5x8_ptr(t.mins % 10), 5);
 
 	display_time_separator();
 
-	gfx_image_at(35, 6, digit_ptr(t.secs/ 10), 5);
-	gfx_image_at(41, 6, digit_ptr(t.secs % 10), 5);
+	gfx_image_at(35, 6, digit5x8_ptr(t.secs/ 10), 5);
+	gfx_image_at(41, 6, digit5x8_ptr(t.secs % 10), 5);
 }
 
 // displays the time vertical centered. (16 pixels in Y axis).
 void display_number(uint16_t seconds)
 {
-	uint16_t secs = seconds;
-	
-	if (seconds >= 10000)
-	{
-		uint8_t ten_thousands = secs / 10000;
-		gfx_image_at(14, 6, digit_ptr(ten_thousands), 5);
-		secs -= (ten_thousands * 10000);
-	}
+	secs_base10_t secs = seconds_to_base10(seconds);
+
+	if (secs.ten_thousands != 0)
+		gfx_image_at(14, 6, digit5x8_ptr(secs.ten_thousands), 5);
 
 	if (seconds >= 1000)
 	{
-		uint8_t thousands = secs / 1000;
-		gfx_image_at(20, 6, digit_ptr(thousands), 5);
-		secs -= (thousands * 1000);
-
+		gfx_image_at(20, 6, digit5x8_ptr(secs.thousands), 5);
 		gfx_image_at(26, 6, &g_comma[0], 2);
 	}
-	
-	uint8_t hundreds = secs / 100;
-	gfx_image_at(29, 6, digit_ptr(hundreds), 5);
-	secs -= (hundreds * 100);	
 
-	uint8_t tens = secs / 10;
-	gfx_image_at(35, 6, digit_ptr(tens), 5);
-	secs -= (tens * 10);
-	
-	gfx_image_at(41, 6, digit_ptr(secs), 5);
+	gfx_image_at(29, 6, digit5x8_ptr(secs.hundreds), 5);
+	gfx_image_at(35, 6, digit5x8_ptr(secs.tens), 5);
+	gfx_image_at(41, 6, digit5x8_ptr(secs.units), 5);
 }
 
 // displays the time separator symbol.
@@ -307,54 +282,4 @@ void clear_time_separator(void)
 	oled_write_pixels_at(33, 2, 0x00);
 }
 
-// returns pointer to digit.
-uint8_t const * const digit_ptr(uint8_t digit)
-{
-	uint8_t const * addr = &g_space[0];
-
-	switch(digit)
-	{
-		case 0:
-		addr = &g_zero[0];
-		break;
-
-		case 1:
-		addr = &g_one[0];
-		break;
-
-		case 2:
-		addr = &g_two[0];
-		break;
-
-		case 3:
-		addr = &g_three[0];
-		break;
-
-		case 4:
-		addr = &g_four[0];
-		break;
-
-		case 5:
-		addr = &g_five[0];
-		break;
-
-		case 6:
-		addr = &g_six[0];
-		break;
-
-		case 7:
-		addr = &g_seven[0];
-		break;
-
-		case 8:
-		addr = &g_eight[0];
-		break;
-
-		case 9:
-		addr = &g_nine[0];
-		break;
-	}
-
-	return addr;
-}
 

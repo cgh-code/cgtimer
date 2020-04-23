@@ -160,13 +160,19 @@
     <Compile Include="gfx.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="machine.c">
+    <Compile Include="slotmachine.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="machine.h">
+    <Compile Include="slotmachine.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="numeric5x8.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="numeric5x8.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="time.c">

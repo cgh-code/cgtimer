@@ -22,11 +22,10 @@
  *
  */ 
 
+#include <stdint.h>
+
 #ifndef GFX_H_
 #define GFX_H_
-#endif /* GFX_H_ */
-
-#include <stdint.h>
 
 // displays a single column of 8 pixel rows at the given pixel co-ordinates.
 void gfx_pixels_at(uint8_t x, uint8_t y, uint8_t pixels);
@@ -35,3 +34,5 @@ void gfx_pixels_at(uint8_t x, uint8_t y, uint8_t pixels);
  // the image is a dynamic number of pixel columns (parameter columns).
  // the image is 8 rows of pixels.
 void gfx_image_at(uint8_t x, uint8_t y, uint8_t const * const image, uint8_t columns);
+
+#endif /* GFX_H_ */
