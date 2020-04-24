@@ -10,7 +10,7 @@ See folder for MC0010 datasheet.
 
 By default the OLED display is wired to the ATMega328P MCU using the following pins: -
 
-
+<pre>
   OLED                     ATMega328P
  ______                  ____      ____
        |                |    |____|    |
@@ -34,7 +34,7 @@ By default the OLED display is wired to the ATMega328P MCU using the following p
    RS  | <----------------------------------------- 
        |
  ______|
- 
+ </pre>
  
  OLED mappings DB0 to DB7, EN, RW and RS are fully configurable by changing the #define statements in cgoled.h
  
